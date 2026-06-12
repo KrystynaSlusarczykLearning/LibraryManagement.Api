@@ -1,6 +1,5 @@
-@LibraryManagement.Api_HostAddress = http://localhost:5232
+@LibraryManagement.Api_HostAddress = https://localhost:7246
 
-GET {{LibraryManagement.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+GET {{LibraryManagement.Api_HostAddress}}/api/categories
 
 ###
