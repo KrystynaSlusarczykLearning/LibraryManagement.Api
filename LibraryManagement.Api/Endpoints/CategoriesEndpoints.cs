@@ -127,17 +127,17 @@ public static class CategoriesEndpoints
 
     private static async Task<Results<NoContent, ProblemHttpResult>> Delete(int id)
     {
-        var categorytoBeDeleted = _categories.FirstOrDefault(
+        var categoryToBeDeleted = _categories.FirstOrDefault(
             category => category.Id == id);
 
-        if(categorytoBeDeleted is null)
+        if(categoryToBeDeleted is null)
         {
             return TypedResults.Problem(
                 detail: $"A category with Id {id} has not been found.",
                 statusCode: StatusCodes.Status404NotFound);
         }
 
-        _categories.Remove(categorytoBeDeleted);
+        _categories.Remove(categoryToBeDeleted);
 
         return TypedResults.NoContent();
     }
