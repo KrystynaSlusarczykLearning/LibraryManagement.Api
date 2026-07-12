@@ -20,6 +20,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
+    await DataSeeder.SeedAsync(app.Services);
 }
 
 app.UseHttpsRedirection();
@@ -28,3 +29,4 @@ app.MapCategoryEndpoints();
 app.MapControllers();
 
 app.Run();
+
