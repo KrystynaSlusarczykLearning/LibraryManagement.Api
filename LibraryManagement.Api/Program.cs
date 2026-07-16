@@ -14,6 +14,7 @@ builder.Services.AddDbContext<LibraryDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("LibraryDb")));
 builder.Services.AddScoped<AuthorMapper>();
+builder.Services.AddScoped<CategoryMapper>();
 
 var app = builder.Build();
 
