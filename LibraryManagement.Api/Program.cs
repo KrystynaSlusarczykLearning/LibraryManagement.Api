@@ -1,6 +1,9 @@
+using FluentValidation;
 using LibraryManagement.Api.DataAccess;
+using LibraryManagement.Api.DTOs.Categories;
 using LibraryManagement.Api.Endpoints;
 using LibraryManagement.Api.Mapping;
+using LibraryManagement.Api.Validators.Categories;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -15,6 +18,8 @@ builder.Services.AddDbContext<LibraryDbContext>(options =>
         builder.Configuration.GetConnectionString("LibraryDb")));
 builder.Services.AddScoped<AuthorMapper>();
 builder.Services.AddScoped<CategoryMapper>();
+builder.Services.AddScoped<IValidator<CreateCategoryDto>, CreateCategoryDtoValidator>();
+builder.Services.AddScoped<IValidator<UpdateCategoryDto>, UpdateCategoryDtoValidator>();
 
 var app = builder.Build();
 
