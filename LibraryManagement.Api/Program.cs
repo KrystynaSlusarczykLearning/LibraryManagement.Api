@@ -3,9 +3,11 @@ using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Categories;
 using LibraryManagement.Api.Endpoints;
 using LibraryManagement.Api.Mapping;
+using LibraryManagement.Api.Middleware;
 using LibraryManagement.Api.Validators.Categories;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,18 +22,22 @@ builder.Services.AddScoped<AuthorMapper>();
 builder.Services.AddScoped<CategoryMapper>();
 builder.Services.AddScoped<IValidator<CreateCategoryDto>, CreateCategoryDtoValidator>();
 builder.Services.AddScoped<IValidator<UpdateCategoryDto>, UpdateCategoryDtoValidator>();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+app.UseExceptionHandler();
+app.UseHttpsRedirection();
+app.UseMiddleware<RequestTimingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
     await DataSeeder.SeedAsync(app.Services);
 }
-
-app.UseHttpsRedirection();
 
 app.MapCategoryEndpoints();
 app.MapControllers();
