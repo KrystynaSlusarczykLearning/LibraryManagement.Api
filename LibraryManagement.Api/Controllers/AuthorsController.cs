@@ -3,9 +3,11 @@ using LibraryManagement.Api.DTOs.Authors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Api.Mapping;
+using LibraryManagement.Api.Filters;
 
 namespace LibraryManagement.Api.Controllers;
 
+[ServiceFilter(typeof(LogActionFilter))]
 [ApiController]
 [Route("api/[controller]")]
 public class AuthorsController(
