@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using LibraryManagement.Api.DTOs.Categories;
 
 namespace LibraryManagement.Api.Filters;
 

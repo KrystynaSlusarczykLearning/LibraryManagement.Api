@@ -1,13 +1,10 @@
 ﻿using FluentValidation;
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Categories;
-using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.Filters;
 using LibraryManagement.Api.Mapping;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
 
 namespace LibraryManagement.Api.Endpoints;
 
@@ -38,7 +35,8 @@ public static class CategoriesEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict);
 
         group.MapDelete("/{id:int}", Delete)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
     }
 
     private static async Task<Results<Ok<ReadCategoryDto>, ProblemHttpResult>> GetById(
@@ -137,6 +135,17 @@ public static class CategoriesEndpoints
             return TypedResults.Problem(
                 detail: $"A category with Id {id} has not been found.",
                 statusCode: StatusCodes.Status404NotFound);
+        }
+
+        var hasBooks = await dbContext.Books.AnyAsync(book => book.CategoryId == id);
+
+        if(hasBooks)
+        {
+            return TypedResults.Problem(
+                detail: $"Cannot delete the category with Id {id}, " +
+                        $"because it has books assigned. " +
+                        $"Please remove or reassign the books first.",
+                statusCode: StatusCodes.Status409Conflict);
         }
 
         dbContext.Categories.Remove(categoryToBeDeleted);

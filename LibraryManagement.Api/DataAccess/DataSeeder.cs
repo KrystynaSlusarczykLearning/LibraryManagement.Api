@@ -35,6 +35,63 @@ public static class DataSeeder
 
             await dbContext.Categories.AddRangeAsync(categories);
             await dbContext.SaveChangesAsync();
+
+            var fiction = categories.First(category => category.Name == "Fiction");
+            var fantasy = categories.First(category => category.Name == "Fantasy");
+            var nonFiction = categories.First(category => category.Name == "Non-Fiction");
+
+            var orwell = authors.First(author => author.LastName == "Orwell");
+            var austen = authors.First(author => author.LastName == "Austen");
+            var tolkien = authors.First(author => author.LastName == "Tolkien");
+            var hemingway = authors.First(author => author.LastName == "Hemingway");
+
+            var books = new List<Book>
+            {
+                new Book
+                {
+                    Title = "1984",
+                    TotalCopies = 5,
+                    AvailableCopies = 5,
+                    CategoryId = fiction.Id,
+                    Authors = [orwell]
+                },
+                new Book
+                {
+                    Title = "Pride and Prejudice",
+                    TotalCopies = 4,
+                    AvailableCopies = 3,
+                    CategoryId = fiction.Id,
+                    Authors = [austen]
+                },
+                new Book
+                {
+                    Title = "The Lord of the Rings",
+                    TotalCopies = 6,
+                    AvailableCopies = 6,
+                    CategoryId = fantasy.Id,
+                    Authors = [tolkien]
+                },
+                new Book
+                {
+                    Title = "A Farewell to Arms",
+                    TotalCopies = 3,
+                    AvailableCopies = 2,
+                    CategoryId = fiction.Id,
+                    Authors = [hemingway]
+                },
+                new Book
+                {
+                    Title = "Animal Farm",
+                    TotalCopies = 4,
+                    AvailableCopies = 4,
+                    CategoryId = fiction.Id,
+                    Authors = [orwell]
+                }
+            };
+
+            await dbContext.Books.AddRangeAsync(books);
+            
+            await dbContext.SaveChangesAsync();
         }
     }
 }
