@@ -1,8 +1,10 @@
 ﻿using FluentValidation;
 using LibraryManagement.Api.DataAccess;
+using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.DTOs.Categories;
 using LibraryManagement.Api.Filters;
 using LibraryManagement.Api.Mapping;
+using LibraryManagement.Api.RequestParameters;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,6 +24,9 @@ public static class CategoriesEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapGet("/", GetAll);
+
+        group.MapGet("/{id:int}/books", GetBooksByCategory)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("/", Create)
             .AddEndpointFilter<ValidationFilter<CreateCategoryDto>>()
@@ -65,6 +70,54 @@ public static class CategoriesEndpoints
         var readDtos = categories
             .Select(mapper.ToReadDto)
             .ToList();
+
+        return TypedResults.Ok(readDtos);
+    }
+
+    private static async Task<Results<Ok<List<ReadBookDto>>, ProblemHttpResult>> GetBooksByCategory(
+        int id,
+        LibraryDbContext dbContext,
+        HttpContext httpContext,
+        BookMapper mapper,
+        int pageNumber = PaginationParameters.DefaultPageNumber,
+        int pageSize = PaginationParameters.DefaultPageSize)
+    {
+        var pagination = new PaginationParameters
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        var category = await dbContext.Categories.FindAsync(id);
+
+        if (category is null)
+        {
+            return TypedResults.Problem(
+                detail: $"A category with Id {id} has not been found.",
+                statusCode: StatusCodes.Status404NotFound);
+        }
+
+        var query = dbContext.Books
+            .Include(book => book.Category)
+            .Include(book => book.Authors)
+            .Where(book => book.CategoryId == id)
+            .AsQueryable();
+
+        var totalCount = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling((double)totalCount / pagination.PageSize);
+
+        var books = await query
+            .OrderBy(book => book.Id)
+            .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
+            .ToListAsync();
+
+        var readDtos = books
+            .Select(mapper.ToReadDto)
+            .ToList();
+
+        httpContext.Response.Headers.Append("X-Total-Count", totalCount.ToString());
+        httpContext.Response.Headers.Append("X-Total-Pages", totalPages.ToString());
 
         return TypedResults.Ok(readDtos);
     }
