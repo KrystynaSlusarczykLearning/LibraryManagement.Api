@@ -1,9 +1,11 @@
-﻿using LibraryManagement.Api.DataAccess;
+﻿using ErrorOr;
+using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.Entities;
 using LibraryManagement.Api.Mapping;
 using LibraryManagement.Api.RequestParameters;
 using LibraryManagement.Api.RequestParameters.Enums;
+using LibraryManagement.Api.Services.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +15,8 @@ namespace LibraryManagement.Api.Controllers;
 [Route("api/[controller]")]
 public class BooksController(
     LibraryDbContext dbContext,
-    BookMapper mapper) : ControllerBase
+    BookMapper mapper,
+    IBooksService booksService) : WebApiController
 {
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(ReadBookDto), StatusCodes.Status200OK)]
@@ -42,57 +45,20 @@ public class BooksController(
         [FromQuery] BookFilteringParameters filteringParameters,
         [FromQuery] SortingParameters<BookSortBy> sortingParameters)
     {
-        var query = dbContext.Books
-            .Include(book => book.Category)
-            .Include(book => book.Authors)
-            .AsQueryable();
+        var result = await booksService.GetAllAsync(
+            pagination,
+            filteringParameters,
+            sortingParameters);
 
-        if(filteringParameters.Title is not null)
+        if (result.IsError)
         {
-            query = query.Where(
-                book => book.Title.Contains(filteringParameters.Title));
+            var error = Problem(result.FirstError);
         }
 
-        if (filteringParameters.CategoryId is not null)
-        {
-            query = query.Where(
-                book => book.CategoryId == filteringParameters.CategoryId);
-        }
+        Response.Headers.Append("X-Total-Count", result.Value.TotalCount.ToString());
+        Response.Headers.Append("X-Total-Pages", result.Value.TotalPages.ToString());
 
-        if (filteringParameters.AuthorId is not null)
-        {
-            query = query.Where(
-                book => book.Authors.Any(
-                    author => author.Id == filteringParameters.AuthorId));
-        }
-
-        query = sortingParameters.SortBy switch
-        {
-            BookSortBy.Title => sortingParameters.SortDirection == SortDirection.Asc ?
-                query.OrderBy(book => book.Title) :
-                query.OrderByDescending(book => book.Title),
-            BookSortBy.AvailableCopies => sortingParameters.SortDirection == SortDirection.Asc ?
-                query.OrderBy(book => book.AvailableCopies) :
-                query.OrderByDescending(book => book.AvailableCopies),
-            _ => query.OrderBy(book => book.Id)
-        };
-
-        var totalCount = await query.CountAsync();
-        var totalPages = (int)Math.Ceiling((double)totalCount / pagination.PageSize);
-
-        var books = await query
-            .Skip((pagination.PageNumber - 1) * pagination.PageSize)
-            .Take(pagination.PageSize)
-            .ToListAsync();
-
-        var readDtos = books
-            .Select(mapper.ToReadDto)
-            .ToList();
-
-        Response.Headers.Append("X-Total-Count", totalCount.ToString());
-        Response.Headers.Append("X-Total-Pages", totalPages.ToString());
-
-        return Ok(readDtos);
+        return Ok(result.Value.Items);
     }
 
     [HttpPost]
@@ -100,41 +66,17 @@ public class BooksController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ReadBookDto>> Create(CreateBookDto createDto)
     {
-        var category = await dbContext.Categories.FirstOrDefaultAsync(
-            category => category.Id == createDto.CategoryId);
+        var result = await booksService.CreateAsync(createDto);
 
-        if (category is null)
+        if(result.IsError)
         {
-            return Problem(
-                detail: $"Category with Id {createDto.CategoryId} does not exist.",
-                statusCode: StatusCodes.Status400BadRequest);
+            var error = Problem(result.FirstError);
         }
-
-        var uniqueAuthorIds = createDto.AuthorIds.Distinct().ToList();
-
-        var authors = await dbContext.Authors
-            .Where(author => uniqueAuthorIds.Contains(author.Id))
-            .ToListAsync();
-
-        if(authors.Count != uniqueAuthorIds.Count)
-        {
-            return Problem(
-                detail: "One or more of the provided author ids is not valid.",
-                statusCode: StatusCodes.Status400BadRequest);
-        }
-
-        var book = mapper.ToEntity(createDto);
-        book.AvailableCopies = book.TotalCopies;
-        book.Category = category;
-        book.Authors = authors;
-
-        dbContext.Books.Add(book);
-        await dbContext.SaveChangesAsync();
 
         return CreatedAtAction(
             nameof(GetById),
-            new { id = book.Id },
-            mapper.ToReadDto(book));
+            new { id = result.Value.Id },
+            result.Value);
     }
 
     [HttpPut("{id:int}")]

@@ -9,5 +9,5 @@ public record SortingParameters<TSortBy> where TSortBy : struct, Enum
     public TSortBy? SortBy { get; init; } = null;
 
     [FromQuery(Name = "sortDirection")]
-    public SortDirection SortDirection { get; init; } = Enums.SortDirection.Asc;
+    public SortDirection SortDirection { get; init; } = SortDirection.Asc;
 }
