@@ -1,21 +1,14 @@
-﻿using ErrorOr;
-using LibraryManagement.Api.DataAccess;
-using LibraryManagement.Api.DTOs.Books;
-using LibraryManagement.Api.Entities;
-using LibraryManagement.Api.Mapping;
+﻿using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.RequestParameters;
 using LibraryManagement.Api.RequestParameters.Enums;
 using LibraryManagement.Api.Services.Contracts;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace LibraryManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class BooksController(
-    LibraryDbContext dbContext,
-    BookMapper mapper,
     IBooksService booksService) : WebApiController
 {
     [HttpGet("{id:int}")]
@@ -23,19 +16,14 @@ public class BooksController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ReadBookDto>> GetById(int id)
     {
-        var book = await dbContext.Books
-            .Include(book => book.Category)
-            .Include(book => book.Authors)
-            .FirstOrDefaultAsync(book => book.Id == id);
+        var result = await booksService.GetByIdAsync(id);
 
-        if(book is null)
+        if (result.IsError)
         {
-            return Problem(
-                detail: $"A book with Id {id} has not been found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return Problem(result.FirstError);
         }
 
-        return Ok(mapper.ToReadDto(book));
+        return Ok(result.Value);
     }
 
     [HttpGet]
@@ -52,7 +40,7 @@ public class BooksController(
 
         if (result.IsError)
         {
-            var error = Problem(result.FirstError);
+            return Problem(result.FirstError);
         }
 
         Response.Headers.Append("X-Total-Count", result.Value.TotalCount.ToString());
@@ -70,7 +58,7 @@ public class BooksController(
 
         if(result.IsError)
         {
-            var error = Problem(result.FirstError);
+            return Problem(result.FirstError);
         }
 
         return CreatedAtAction(
@@ -85,73 +73,14 @@ public class BooksController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ReadBookDto>> Update(int id, UpdateBookDto updateDto)
     {
-        var existingBook = await dbContext.Books
-            .Include(book => book.Authors)
-            .FirstOrDefaultAsync(book => book.Id == id);
+        var result = await booksService.UpdateAsync(id, updateDto);
 
-        if (existingBook is null)
+        if (result.IsError)
         {
-            return Problem(
-                detail: $"A book with Id {id} has not been found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return Problem(result.FirstError);
         }
 
-        var category = await dbContext.Categories.FirstOrDefaultAsync(
-            category => category.Id == updateDto.CategoryId);
-
-        if (category is null)
-        {
-            return Problem(
-                detail: $"Category with Id {updateDto.CategoryId} does not exist.",
-                statusCode: StatusCodes.Status400BadRequest);
-        }
-
-        var uniqueAuthorIds = updateDto.AuthorIds.Distinct().ToList();
-
-        var authors = await dbContext.Authors
-            .Where(author => uniqueAuthorIds.Contains(author.Id))
-            .ToListAsync();
-
-        if (authors.Count != uniqueAuthorIds.Count)
-        {
-            return Problem(
-                detail: "One or more of the provided author ids is not valid.",
-                statusCode: StatusCodes.Status400BadRequest);
-        }
-
-        var totalCopiesBeforeEntityUpdate = existingBook.TotalCopies;
-        UpdateAvailableCopies(
-            totalCopiesBeforeEntityUpdate,
-            updateDto.TotalCopies, 
-            existingBook);
-
-        mapper.UpdateEntity(updateDto, existingBook);
-        existingBook.Category = category;
-        existingBook.Authors = authors;
-
-        await dbContext.SaveChangesAsync();
-
-        return Ok(mapper.ToReadDto(existingBook));
-    }
-
-    private static void UpdateAvailableCopies(
-        int oldTotalCopies,
-        int newTotalCopies,
-        Book existingBook)
-    {
-        var totalCopiesDelta = newTotalCopies - oldTotalCopies;
-
-        if (totalCopiesDelta > 0)
-        {
-            existingBook.AvailableCopies += totalCopiesDelta;
-        }
-        else if (totalCopiesDelta < 0)
-        {
-            // TODO: once Loans are implemented, add a check here to ensure
-            // that TotalCopies cannot be reduced below the number of active loans
-
-            existingBook.AvailableCopies += totalCopiesDelta;
-        }
+        return Ok(result.Value);
     }
 
     [HttpDelete("{id:int}")]
@@ -159,17 +88,12 @@ public class BooksController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult> Delete(int id)
     {
-        var bookToBeDeleted = await dbContext.Books.FindAsync(id);
+        var result = await booksService.DeleteAsync(id);
 
-        if (bookToBeDeleted is null)
+        if(result.IsError)
         {
-            return Problem(
-                detail: $"A book with Id {id} has not been found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return Problem(result.FirstError);
         }
-
-        dbContext.Books.Remove(bookToBeDeleted);
-        await dbContext.SaveChangesAsync();
 
         return NoContent();
     }

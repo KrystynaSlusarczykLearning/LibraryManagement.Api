@@ -1,5 +1,4 @@
 ﻿using ErrorOr;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace LibraryManagement.Api.Errors;
 
@@ -12,4 +11,8 @@ public static class BookErrors
     public static Error AuthorsNotFound() =>
         Error.Validation(
                 description: "One or more of the provided author ids is not valid.");
+
+    public static Error BookNotFound(int id) =>
+        Error.NotFound(
+                description: $"A book with Id {id} has not been found.");
 }
