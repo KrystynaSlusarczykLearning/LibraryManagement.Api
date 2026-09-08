@@ -28,6 +28,7 @@ builder.Services.AddScoped<IValidator<UpdateCategoryDto>, UpdateCategoryDtoValid
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddScoped<LogActionFilter>();
+builder.Services.AddScoped<IAuthorsService, AuthorsService>();
 builder.Services.AddScoped<IBooksService, BooksService>();
 
 var app = builder.Build();
