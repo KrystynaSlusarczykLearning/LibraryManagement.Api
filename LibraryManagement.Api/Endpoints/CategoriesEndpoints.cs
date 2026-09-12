@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using LibraryManagement.Api.Common;
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.DTOs.Categories;
@@ -116,8 +117,8 @@ public static class CategoriesEndpoints
             .Select(mapper.ToReadDto)
             .ToList();
 
-        httpContext.Response.Headers.Append("X-Total-Count", totalCount.ToString());
-        httpContext.Response.Headers.Append("X-Total-Pages", totalPages.ToString());
+        httpContext.Response.Headers.Append(ResponseHeaders.TotalCount, totalCount.ToString());
+        httpContext.Response.Headers.Append(ResponseHeaders.TotalPages, totalPages.ToString());
 
         return TypedResults.Ok(readDtos);
     }
