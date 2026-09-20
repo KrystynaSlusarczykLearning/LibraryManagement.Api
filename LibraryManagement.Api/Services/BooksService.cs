@@ -153,10 +153,15 @@ public class BooksService(
         }
 
         var totalCopiesBeforeEntityUpdate = existingBook.TotalCopies;
-        UpdateAvailableCopies(
+        var updateCopiesResult = await UpdateAvailableCopies(
             totalCopiesBeforeEntityUpdate,
             updateDto.TotalCopies,
             existingBook);
+
+        if(updateCopiesResult.IsError)
+        {
+            return updateCopiesResult.FirstError;
+        }
 
         mapper.UpdateEntity(updateDto, existingBook);
         existingBook.Category = category;
@@ -176,13 +181,21 @@ public class BooksService(
             return BookErrors.BookNotFound(id);
         }
 
+        var hasLoans = await dbContext.Loans.AnyAsync(
+            loan => loan.BookId == id);
+
+        if(hasLoans)
+        {
+            return BookErrors.HasLoans(id);
+        }
+
         dbContext.Books.Remove(bookToBeDeleted);
         await dbContext.SaveChangesAsync();
 
         return Result.Deleted;
     }
 
-    private static void UpdateAvailableCopies(
+    private async Task<ErrorOr<Success>> UpdateAvailableCopies(
         int oldTotalCopies,
         int newTotalCopies,
         Book existingBook)
@@ -195,10 +208,18 @@ public class BooksService(
         }
         else if (totalCopiesDelta < 0)
         {
-            // TODO: once Loans are implemented, add a check here to ensure
-            // that TotalCopies cannot be reduced below the number of active loans
+            var activeLoansCount = await dbContext.Loans
+                .CountAsync(loan => loan.BookId == existingBook.Id &&
+                                    loan.ReturnDate == null);
+
+            if (newTotalCopies < activeLoansCount)
+            {
+                return BookErrors.NotEnoughAvailableCopies(existingBook.Id);
+            }
 
             existingBook.AvailableCopies += totalCopiesDelta;
         }
+
+        return Result.Success;
     }
 }

@@ -26,6 +26,7 @@ builder.Services.AddScoped<AuthorMapper>();
 builder.Services.AddScoped<BookMapper>();
 builder.Services.AddScoped<CategoryMapper>();
 builder.Services.AddScoped<MemberMapper>();
+builder.Services.AddScoped<LoanMapper>();
 builder.Services.AddScoped<IValidator<CreateCategoryDto>, CreateCategoryDtoValidator>();
 builder.Services.AddScoped<IValidator<UpdateCategoryDto>, UpdateCategoryDtoValidator>();
 builder.Services.AddScoped<IValidator<CreateMemberDto>, CreateMemberDtoValidator>();
@@ -35,6 +36,7 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddScoped<LogActionFilter>();
 builder.Services.AddScoped<IAuthorsService, AuthorsService>();
 builder.Services.AddScoped<IBooksService, BooksService>();
+builder.Services.AddScoped<ILoansService, LoansService>();
 
 var app = builder.Build();
 

@@ -15,4 +15,14 @@ public static class BookErrors
     public static Error BookNotFound(int id) =>
         Error.NotFound(
                 description: $"A book with Id {id} has not been found.");
+
+    public static Error HasLoans(int id) =>
+        Error.Conflict(
+                description: $"A book with Id {id} cannot be deleted, because " +
+                             $"it has loans associated with it.");
+
+    public static Error NotEnoughAvailableCopies(int id) =>
+        Error.Conflict(
+                description: $"A book with Id {id} cannot have TotalCopies " +
+                             $"reduced below the number of currently active loans.");
 }

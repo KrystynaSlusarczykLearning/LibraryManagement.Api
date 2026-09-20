@@ -21,4 +21,3 @@ public partial class BookMapper
     [MapperIgnoreTarget(nameof(Book.Authors))]
     public partial void UpdateEntity(UpdateBookDto source, Book target);
 }
-
