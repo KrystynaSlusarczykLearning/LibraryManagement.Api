@@ -1,6 +1,7 @@
 ﻿using LibraryManagement.Api.Common;
 using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.DTOs.Categories;
+using LibraryManagement.Api.Entities;
 using LibraryManagement.IntegrationTests.Utils;
 using System.Net;
 
@@ -250,8 +251,7 @@ internal class CategoriesTests : IntegrationTestsBase
     [Test]
     public async Task GetBooksByCategory_ShouldReturnNotFound_WhenCategoryDoesNotExist()
     {
-        var getBooksByCategoryResponse = await GetWithPaging(
-            $"{BaseUrl}/{NonExistentCategoryId}/books");
+        var getBooksByCategoryResponse = await GetBooksByCategoryAsync(NonExistentCategoryId);
 
         Assert.That(getBooksByCategoryResponse.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
         await getBooksByCategoryResponse.AssertThatProblemDetailsContain(
@@ -271,8 +271,7 @@ internal class CategoriesTests : IntegrationTestsBase
         await TestDataFactory.CreateBookAsync(category2.Id, title: "Book3");
         await TestDataFactory.CreateBookAsync(category2.Id, title: "Book4");
 
-        var getBooksByCategoryResponse = await GetWithPaging(
-            $"{BaseUrl}/{category1.Id}/books");
+        var getBooksByCategoryResponse = await GetBooksByCategoryAsync(category1.Id);
         Assert.That(getBooksByCategoryResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
         var books = await getBooksByCategoryResponse.ReadPayloadAsync<List<ReadBookDto>>();
@@ -294,8 +293,7 @@ internal class CategoriesTests : IntegrationTestsBase
         var category = await CreateAsync<CreateCategoryDto, ReadCategoryDto>(
             new CreateCategoryDto { Name = CategoryNameHistory });
 
-        var getBooksByCategoryResponse = await GetWithPaging(
-            $"{BaseUrl}/{category.Id}/books");
+        var getBooksByCategoryResponse = await GetBooksByCategoryAsync(category.Id);
         Assert.That(getBooksByCategoryResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
         var books = await getBooksByCategoryResponse.ReadPayloadAsync<List<ReadBookDto>>();
@@ -320,8 +318,8 @@ internal class CategoriesTests : IntegrationTestsBase
             await TestDataFactory.CreateBookAsync(category.Id, title: $"Book{i}");
         }
 
-        var getBooksByCategoryResponse = await GetWithPaging(
-            $"{BaseUrl}/{category.Id}/books", 2, 3);
+        var getBooksByCategoryResponse = await GetBooksByCategoryAsync(
+            category.Id, 2, 3);
         Assert.That(getBooksByCategoryResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
         var books = await getBooksByCategoryResponse.ReadPayloadAsync<List<ReadBookDto>>();
@@ -348,8 +346,8 @@ internal class CategoriesTests : IntegrationTestsBase
             await TestDataFactory.CreateBookAsync(category.Id, title: $"Book{i}");
         }
 
-        var getBooksByCategoryResponse = await GetWithPaging(
-            $"{BaseUrl}/{category.Id}/books", 3, 3);
+        var getBooksByCategoryResponse = await GetBooksByCategoryAsync(
+            category.Id, 3, 3);
         Assert.That(getBooksByCategoryResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
         var books = await getBooksByCategoryResponse.ReadPayloadAsync<List<ReadBookDto>>();
@@ -370,5 +368,19 @@ internal class CategoriesTests : IntegrationTestsBase
         var categoryFromGetResponse = await getCategoryResponse.ReadPayloadAsync<ReadCategoryDto>();
         Assert.That(categoryFromGetResponse, Is.Not.Null);
         Assert.That(categoryFromGetResponse.Name, Is.EqualTo(categoryName));
+    }
+    protected async Task<HttpResponseMessage> GetBooksByCategoryAsync(
+        int categoryId,
+        int? pageNumber = null,
+        int? pageSize = null)
+    {
+        var queryParameters = new Dictionary<string, string?>
+        {
+            ["pageNumber"] = pageNumber?.ToString(),
+            ["pageSize"] = pageSize?.ToString()
+        };
+
+        return await GetWithQuery(
+            $"{BaseUrl}/{categoryId}/books", queryParameters);
     }
 }

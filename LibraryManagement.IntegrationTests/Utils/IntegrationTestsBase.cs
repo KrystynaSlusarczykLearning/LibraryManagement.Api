@@ -87,25 +87,11 @@ internal abstract class IntegrationTestsBase
         return await Client.GetAsync(BaseUrl);
     }
 
-    protected async Task<HttpResponseMessage> GetWithPaging(
+    protected async Task<HttpResponseMessage> GetWithQuery(
         string uri,
-        int? pageNumber = null,
-        int? pageSize = null)
+        Dictionary<string, string?> queryParameters)
     {
-        var queryParameters = new Dictionary<string, string?>();
-
-        if (pageNumber is not null)
-        {
-            queryParameters["pageNumber"] = pageNumber.ToString();
-        }
-
-        if (pageSize is not null)
-        {
-            queryParameters["pageSize"] = pageSize.ToString();
-        }
-
-        var url = QueryHelpers.AddQueryString(
-            uri, queryParameters);
+        var url = QueryHelpers.AddQueryString(uri, queryParameters);
 
         return await Client.GetAsync(url);
     }
