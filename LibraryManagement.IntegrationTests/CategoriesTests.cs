@@ -1,5 +1,4 @@
-﻿using LibraryManagement.Api.Common;
-using LibraryManagement.Api.DTOs.Books;
+﻿using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.DTOs.Categories;
 using LibraryManagement.Api.Entities;
 using LibraryManagement.IntegrationTests.Utils;
@@ -281,10 +280,8 @@ internal class CategoriesTests : IntegrationTestsBase
             books.Select(book => book.Title),
             Is.EqualTo(["Book1", "Book2"]));
 
-        Assert.That(getBooksByCategoryResponse.GetHeaderValue(ResponseHeaders.TotalCount),
-            Is.EqualTo("2"));
-        Assert.That(getBooksByCategoryResponse.GetHeaderValue(ResponseHeaders.TotalPages),
-            Is.EqualTo("1"));
+        getBooksByCategoryResponse.AssertThatPaginationHeadersAre(
+            totalCount: 2, totalPages: 1);
     }
 
     [Test]
@@ -301,10 +298,8 @@ internal class CategoriesTests : IntegrationTestsBase
         Assert.That(books, Is.Not.Null);
         Assert.That(books, Is.Empty);
 
-        Assert.That(getBooksByCategoryResponse.GetHeaderValue(ResponseHeaders.TotalCount),
-            Is.EqualTo("0"));
-        Assert.That(getBooksByCategoryResponse.GetHeaderValue(ResponseHeaders.TotalPages),
-            Is.EqualTo("0"));
+        getBooksByCategoryResponse.AssertThatPaginationHeadersAre(
+            totalCount: 0, totalPages: 0);
     }
 
     [Test]
@@ -329,10 +324,8 @@ internal class CategoriesTests : IntegrationTestsBase
             books.Select(book => book.Title),
             Is.EqualTo(["Book4", "Book5"]));
 
-        Assert.That(getBooksByCategoryResponse.GetHeaderValue(ResponseHeaders.TotalCount),
-            Is.EqualTo("5"));
-        Assert.That(getBooksByCategoryResponse.GetHeaderValue(ResponseHeaders.TotalPages),
-            Is.EqualTo("2"));
+        getBooksByCategoryResponse.AssertThatPaginationHeadersAre(
+            totalCount: 5, totalPages: 2);
     }
 
     [Test]
@@ -355,10 +348,8 @@ internal class CategoriesTests : IntegrationTestsBase
         Assert.That(books, Is.Not.Null);
         Assert.That(books, Is.Empty);
 
-        Assert.That(getBooksByCategoryResponse.GetHeaderValue(ResponseHeaders.TotalCount),
-            Is.EqualTo("5"));
-        Assert.That(getBooksByCategoryResponse.GetHeaderValue(ResponseHeaders.TotalPages),
-            Is.EqualTo("2"));
+        getBooksByCategoryResponse.AssertThatPaginationHeadersAre(
+            totalCount: 5, totalPages: 2);
     }
 
     private async Task AssertCategoryExistsInTheDatabase(int id, string categoryName)
@@ -369,6 +360,7 @@ internal class CategoriesTests : IntegrationTestsBase
         Assert.That(categoryFromGetResponse, Is.Not.Null);
         Assert.That(categoryFromGetResponse.Name, Is.EqualTo(categoryName));
     }
+
     protected async Task<HttpResponseMessage> GetBooksByCategoryAsync(
         int categoryId,
         int? pageNumber = null,

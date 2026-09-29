@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using LibraryManagement.Api.Common;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Json;
 
@@ -49,5 +50,17 @@ internal static class HttpResponseMessageExtensions
     public static string? GetHeaderValue(this HttpResponseMessage response, string key)
     {
         return response.Headers.GetValues(key).FirstOrDefault();
+    }
+
+    public static void AssertThatPaginationHeadersAre(
+        this HttpResponseMessage response, int totalCount, int totalPages)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.GetHeaderValue(ResponseHeaders.TotalCount),
+                Is.EqualTo(totalCount.ToString()));
+            Assert.That(response.GetHeaderValue(ResponseHeaders.TotalPages),
+                Is.EqualTo(totalPages.ToString()));
+        });
     }
 }

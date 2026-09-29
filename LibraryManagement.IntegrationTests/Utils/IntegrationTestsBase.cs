@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 namespace LibraryManagement.IntegrationTests.Utils;
@@ -57,6 +58,25 @@ internal abstract class IntegrationTestsBase
         await dbContext.Database.EnsureCreatedAsync();
     }
 
+    protected async Task<HttpResponseMessage> GetByIdAsync(int id)
+    {
+        return await Client.GetAsync($"{BaseUrl}/{id}");
+    }
+
+    protected async Task<HttpResponseMessage> GetAllAsync()
+    {
+        return await Client.GetAsync(BaseUrl);
+    }
+
+    protected async Task<HttpResponseMessage> GetWithQuery(
+        string uri,
+        Dictionary<string, string?> queryParameters)
+    {
+        var url = QueryHelpers.AddQueryString(uri, queryParameters);
+
+        return await Client.GetAsync(url);
+    }
+
     protected async Task<TReadDto> CreateAsync<TCreateDto, TReadDto>(
         TCreateDto createDto)
     {
@@ -77,23 +97,20 @@ internal abstract class IntegrationTestsBase
         return await Client.PutAsJsonAsync($"{BaseUrl}/{id}", updateDto);
     }
 
-    protected async Task<HttpResponseMessage> GetByIdAsync(int id)
+    protected async Task<HttpResponseMessage> PatchWithoutBodyAsync(string uri)
     {
-        return await Client.GetAsync($"{BaseUrl}/{id}");
+        return await Client.PatchAsync(uri, null);
     }
 
-    protected async Task<HttpResponseMessage> GetAllAsync()
+    protected async Task<HttpResponseMessage> JsonPatchAsync(
+        int id,
+        params JsonPatchOperation[] operations)
     {
-        return await Client.GetAsync(BaseUrl);
-    }
+        var content = JsonContent.Create(
+            operations,
+            new MediaTypeHeaderValue("application/json-patch+json"));
 
-    protected async Task<HttpResponseMessage> GetWithQuery(
-        string uri,
-        Dictionary<string, string?> queryParameters)
-    {
-        var url = QueryHelpers.AddQueryString(uri, queryParameters);
-
-        return await Client.GetAsync(url);
+        return await Client.PatchAsync($"{BaseUrl}/{id}", content);
     }
 
     protected async Task<HttpResponseMessage> DeleteAsync(int id)
