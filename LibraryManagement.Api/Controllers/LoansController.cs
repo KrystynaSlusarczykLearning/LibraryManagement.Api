@@ -1,5 +1,4 @@
 ﻿using LibraryManagement.Api.Common;
-using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.DTOs.Loans;
 using LibraryManagement.Api.RequestParameters;
 using LibraryManagement.Api.RequestParameters.Enums;

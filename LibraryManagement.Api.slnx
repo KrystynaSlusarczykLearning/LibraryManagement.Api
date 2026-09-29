@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="LibraryManagement.Api/LibraryManagement.Api.csproj" />
+  <Project Path="LibraryManagement.IntegrationTests/LibraryManagement.IntegrationTests.csproj" />
+  <Project Path="LibraryManagement.UnitTests/LibraryManagement.UnitTests.csproj" Id="efb3f817-7783-437f-a076-3fb1a61d3ac0" />
 </Solution>

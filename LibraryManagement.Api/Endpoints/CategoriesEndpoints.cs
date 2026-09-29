@@ -69,6 +69,7 @@ public static class CategoriesEndpoints
         var categories = await dbContext.Categories.ToListAsync();
 
         var readDtos = categories
+            .OrderBy(category => category.Name)
             .Select(mapper.ToReadDto)
             .ToList();
 
