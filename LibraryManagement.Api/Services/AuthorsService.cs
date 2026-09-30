@@ -1,8 +1,9 @@
-﻿using ErrorOr;
+using ErrorOr;
 using LibraryManagement.Api.CustomResults;
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Authors;
 using LibraryManagement.Api.Errors;
+using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.Mapping;
 using LibraryManagement.Api.RequestParameters;
 using LibraryManagement.Api.Services.Contracts;
@@ -36,21 +37,9 @@ public class AuthorsService(
             .OrderBy(author => author.Id)
             .AsQueryable();
 
-        var totalCount = await query.CountAsync();
-
-        var authors = await query
-            .Skip((pagination.PageNumber - 1) * pagination.PageSize)
-            .Take(pagination.PageSize)
-            .ToListAsync();
-
-        var readDtos = authors
-            .Select(mapper.ToReadDto)
-            .ToList();
-
-        return new PagedResult<ReadAuthorDto>(
-            readDtos,
-            totalCount,
-            pagination);
+        return await query.ToPagedResult(
+            pagination,
+            author => mapper.ToReadDto(author));
     }
 
     public async Task<ErrorOr<ReadAuthorDetailDto>> CreateAsync(CreateAuthorDto createDto)

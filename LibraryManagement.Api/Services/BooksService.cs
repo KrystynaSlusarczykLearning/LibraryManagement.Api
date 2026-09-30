@@ -1,9 +1,10 @@
-﻿using ErrorOr;
+using ErrorOr;
 using LibraryManagement.Api.CustomResults;
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.Entities;
 using LibraryManagement.Api.Errors;
+using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.Mapping;
 using LibraryManagement.Api.RequestParameters;
 using LibraryManagement.Api.RequestParameters.Enums;
@@ -71,21 +72,9 @@ public class BooksService(
             _ => query.OrderBy(book => book.Id)
         };
 
-        var totalCount = await query.CountAsync();
-
-        var books = await query
-            .Skip((pagination.PageNumber - 1) * pagination.PageSize)
-            .Take(pagination.PageSize)
-            .ToListAsync();
-
-        var readDtos = books
-            .Select(mapper.ToReadDto)
-            .ToList();
-
-        return new PagedResult<ReadBookDto>(
-            readDtos,
-            totalCount,
-            pagination);
+        return await query.ToPagedResult(
+            pagination,
+            book => mapper.ToReadDto(book));
     }
 
     public async Task<ErrorOr<ReadBookDto>> CreateAsync(CreateBookDto createDto)

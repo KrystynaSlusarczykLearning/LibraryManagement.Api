@@ -1,5 +1,6 @@
 ﻿using LibraryManagement.Api.Common;
 using LibraryManagement.Api.DTOs.Books;
+using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.RequestParameters;
 using LibraryManagement.Api.RequestParameters.Enums;
 using LibraryManagement.Api.Services.Contracts;
@@ -44,9 +45,7 @@ public class BooksController(
             return Problem(result.FirstError);
         }
 
-        Response.Headers.Append(ResponseHeaders.TotalCount, result.Value.TotalCount.ToString());
-        Response.Headers.Append(ResponseHeaders.TotalPages, result.Value.TotalPages.ToString());
-
+        Response.AppendPaginationHeaders(result.Value);
         return Ok(result.Value.Items);
     }
 

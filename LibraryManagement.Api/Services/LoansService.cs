@@ -4,6 +4,7 @@ using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Loans;
 using LibraryManagement.Api.Entities;
 using LibraryManagement.Api.Errors;
+using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.Mapping;
 using LibraryManagement.Api.RequestParameters;
 using LibraryManagement.Api.RequestParameters.Enums;
@@ -79,21 +80,9 @@ public class LoansService(
             _ => query.OrderBy(loan => loan.Id)
         };
 
-        var totalCount = await query.CountAsync();
-
-        var loans = await query
-            .Skip((pagination.PageNumber - 1) * pagination.PageSize)
-            .Take(pagination.PageSize)
-            .ToListAsync();
-
-        var readDtos = loans
-            .Select(mapper.ToReadDto)
-            .ToList();
-
-        return new PagedResult<ReadLoanDto>(
-            readDtos,
-            totalCount,
-            pagination);
+        return await query.ToPagedResult(
+            pagination,
+            loan => mapper.ToReadDto(loan));
     }
 
     public async Task<ErrorOr<ReadLoanDto>> CreateAsync(CreateLoanDto createDto)

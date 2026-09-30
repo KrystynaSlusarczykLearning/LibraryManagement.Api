@@ -2,6 +2,8 @@
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Loans;
 using LibraryManagement.Api.DTOs.Members;
+using LibraryManagement.Api.Errors;
+using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.Filters;
 using LibraryManagement.Api.Mapping;
 using LibraryManagement.Api.RequestParameters;
@@ -54,9 +56,7 @@ public static class MembersEndpoints
 
         if (member is null)
         {
-            return TypedResults.Problem(
-                detail: $"A member with Id {id} has not been found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return MemberErrors.NotFound(id);
         }
 
         return TypedResults.Ok(mapper.ToReadDto(member));
@@ -77,23 +77,13 @@ public static class MembersEndpoints
 
         var query = dbContext.Members.AsQueryable();
 
-        var totalCount = await query.CountAsync();
-        var totalPages = (int)Math.Ceiling((double)totalCount / pagination.PageSize);
+        var pagedResult = await query.ToPagedResult(
+            pagination,
+            member => mapper.ToReadDto(member));
 
-        var members = await query
-            .OrderBy(member => member.Id)
-            .Skip((pagination.PageNumber - 1) * pagination.PageSize)
-            .Take(pagination.PageSize)
-            .ToListAsync();
+        httpContext.Response.AppendPaginationHeaders(pagedResult);
 
-        var readDtos = members
-            .Select(mapper.ToReadDto)
-            .ToList();
-
-        httpContext.Response.Headers.Append(ResponseHeaders.TotalCount, totalCount.ToString());
-        httpContext.Response.Headers.Append(ResponseHeaders.TotalPages, totalPages.ToString());
-
-        return TypedResults.Ok(readDtos);
+        return TypedResults.Ok(pagedResult.Items);
     }
 
     private static async Task<Results<Ok<List<ReadLoanDto>>, ProblemHttpResult>> GetLoans(
@@ -105,9 +95,7 @@ public static class MembersEndpoints
 
         if (member is null)
         {
-            return TypedResults.Problem(
-                detail: $"A member with Id {id} has not been found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return MemberErrors.NotFound(id);
         }
 
         var loans = await dbContext.Loans
@@ -149,9 +137,7 @@ public static class MembersEndpoints
 
         if (existingMember is null)
         {
-            return TypedResults.Problem(
-                detail: $"A member with Id {id} has not been found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return MemberErrors.NotFound(id);
         }
 
         mapper.UpdateEntity(updateDto, existingMember);
@@ -171,10 +157,7 @@ public static class MembersEndpoints
 
         if(hasActiveLoans)
         {
-            return TypedResults.Problem(
-                detail: $"A member with Id {id} cannot be deactivated because " +
-                        $"they have active loans.",
-                statusCode: StatusCodes.Status409Conflict);
+            return MemberErrors.HasActiveLoans(id);
         }
 
         return await SetMemberActiveStatus(id, false, dbContext);
@@ -196,9 +179,7 @@ public static class MembersEndpoints
 
         if (member is null)
         {
-            return TypedResults.Problem(
-                detail: $"A member with Id {id} has not been found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return MemberErrors.NotFound(id);
         }
 
         member.IsActive = isActive;

@@ -1,5 +1,6 @@
 ﻿using LibraryManagement.Api.Common;
 using LibraryManagement.Api.DTOs.Authors;
+using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.Filters;
 using LibraryManagement.Api.RequestParameters;
 using LibraryManagement.Api.Services.Contracts;
@@ -41,8 +42,7 @@ public class AuthorsController(
             return Problem(result.FirstError);
         }
 
-        Response.Headers.Append(ResponseHeaders.TotalCount, result.Value.TotalCount.ToString());
-        Response.Headers.Append(ResponseHeaders.TotalPages, result.Value.TotalPages.ToString());
+        Response.AppendPaginationHeaders(result.Value);
 
         return Ok(result.Value.Items);
     }
@@ -92,14 +92,7 @@ public class AuthorsController(
        int id,
        JsonPatchDocument<PatchAuthorDto> patchDocument)
     {
-        var patchDto = new PatchAuthorDto();
-        patchDocument.ApplyTo(
-            patchDto,
-            jsonPatchError => ModelState.AddModelError(
-                jsonPatchError.AffectedObject.GetType().Name,
-                jsonPatchError.ErrorMessage));
-
-        if(!TryValidateModel(patchDto))
+        if(!IsPatchDocumentValid(patchDocument))
         {
             return ValidationProblem(ModelState);
         }
@@ -128,5 +121,17 @@ public class AuthorsController(
         }
 
         return NoContent();
+    }
+
+    private bool IsPatchDocumentValid(JsonPatchDocument<PatchAuthorDto> patchDocument)
+    {
+        var patchDto = new PatchAuthorDto();
+        patchDocument.ApplyTo(
+            patchDto,
+            jsonPatchError => ModelState.AddModelError(
+                jsonPatchError.AffectedObject.GetType().Name,
+                jsonPatchError.ErrorMessage));
+
+        return TryValidateModel(patchDto);
     }
 }

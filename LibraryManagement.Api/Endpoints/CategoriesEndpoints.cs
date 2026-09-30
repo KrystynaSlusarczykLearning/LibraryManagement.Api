@@ -1,8 +1,11 @@
-﻿using FluentValidation;
+﻿using ErrorOr;
+using FluentValidation;
 using LibraryManagement.Api.Common;
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.DTOs.Categories;
+using LibraryManagement.Api.Errors;
+using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.Filters;
 using LibraryManagement.Api.Mapping;
 using LibraryManagement.Api.RequestParameters;
@@ -54,9 +57,7 @@ public static class CategoriesEndpoints
 
         if (category is null)
         {
-            return TypedResults.Problem(
-                detail: $"A category with Id {id} has not been found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return CategoryErrors.NotFound(id);
         }
 
         return TypedResults.Ok(mapper.ToReadDto(category));
@@ -94,9 +95,7 @@ public static class CategoriesEndpoints
 
         if (category is null)
         {
-            return TypedResults.Problem(
-                detail: $"A category with Id {id} has not been found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return CategoryErrors.NotFound(id);
         }
 
         var query = dbContext.Books
@@ -105,23 +104,13 @@ public static class CategoriesEndpoints
             .Where(book => book.CategoryId == id)
             .AsQueryable();
 
-        var totalCount = await query.CountAsync();
-        var totalPages = (int)Math.Ceiling((double)totalCount / pagination.PageSize);
+        var pagedResult = await query.ToPagedResult(
+            pagination,
+            book => mapper.ToReadDto(book));
 
-        var books = await query
-            .OrderBy(book => book.Id)
-            .Skip((pagination.PageNumber - 1) * pagination.PageSize)
-            .Take(pagination.PageSize)
-            .ToListAsync();
+        httpContext.Response.AppendPaginationHeaders(pagedResult);
 
-        var readDtos = books
-            .Select(mapper.ToReadDto)
-            .ToList();
-
-        httpContext.Response.Headers.Append(ResponseHeaders.TotalCount, totalCount.ToString());
-        httpContext.Response.Headers.Append(ResponseHeaders.TotalPages, totalPages.ToString());
-
-        return TypedResults.Ok(readDtos);
+        return TypedResults.Ok(pagedResult.Items);
     }
 
     private static async Task<Results<CreatedAtRoute<ReadCategoryDto>, ProblemHttpResult>> Create(
@@ -132,9 +121,7 @@ public static class CategoriesEndpoints
         if (await dbContext.Categories.AnyAsync(
             existingCategory => existingCategory.Name == createDto.Name))
         {
-            return TypedResults.Problem(
-                detail: $"A category with Name {createDto.Name} already exists.",
-                statusCode: StatusCodes.Status409Conflict);
+            return CategoryErrors.NameAlreadyTaken(createDto.Name);
         }
 
         var category = mapper.ToEntity(createDto);
@@ -158,18 +145,14 @@ public static class CategoriesEndpoints
 
         if (existingCategory is null)
         {
-            return TypedResults.Problem(
-                detail: $"A category with Id {id} has not been found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return CategoryErrors.NotFound(id);
         }
 
         if (await dbContext.Categories.AnyAsync(category =>
             category.Id != id &&
             category.Name == updateDto.Name))
         {
-            return TypedResults.Problem(
-                detail: $"A category with name {updateDto.Name} already exists.",
-                statusCode: StatusCodes.Status409Conflict);
+            return CategoryErrors.NameAlreadyTaken(updateDto.Name);
         }
 
         mapper.UpdateEntity(updateDto, existingCategory);
@@ -187,20 +170,14 @@ public static class CategoriesEndpoints
 
         if (categoryToBeDeleted is null)
         {
-            return TypedResults.Problem(
-                detail: $"A category with Id {id} has not been found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return CategoryErrors.NotFound(id);
         }
 
         var hasBooks = await dbContext.Books.AnyAsync(book => book.CategoryId == id);
 
         if(hasBooks)
         {
-            return TypedResults.Problem(
-                detail: $"Cannot delete the category with Id {id}, " +
-                        $"because it has books assigned. " +
-                        $"Please remove or reassign the books first.",
-                statusCode: StatusCodes.Status409Conflict);
+            return CategoryErrors.HasBooksAssigned(id);
         }
 
         dbContext.Categories.Remove(categoryToBeDeleted);
