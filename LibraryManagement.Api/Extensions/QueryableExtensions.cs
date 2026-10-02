@@ -8,7 +8,7 @@ namespace LibraryManagement.Api.Extensions;
 public static class QueryableExtensions
 {
     public static async Task<PagedResult<TReadDto>> ToPagedResult<TEntity, TReadDto>(
-        this IQueryable<TEntity> query,
+        this IOrderedQueryable<TEntity> query,
         PaginationParameters pagination,
         Func<TEntity, TReadDto> mappingFunction)
     {

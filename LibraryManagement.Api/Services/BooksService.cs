@@ -21,7 +21,7 @@ public class BooksService(
     {
         var book = await dbContext.Books
             .Include(book => book.Category)
-            .Include(book => book.Authors)
+            .Include(book => book.Authors.OrderBy(author => author.Id))
             .FirstOrDefaultAsync(book => book.Id == id);
 
         if (book is null)
@@ -37,44 +37,14 @@ public class BooksService(
         BookFilteringParameters filteringParameters,
         SortingParameters<BookSortBy> sortingParameters)
     {
-        var query = dbContext.Books
+        return await dbContext.Books
             .Include(book => book.Category)
-            .Include(book => book.Authors)
-            .AsQueryable();
-
-        if (filteringParameters.Title is not null)
-        {
-            query = query.Where(
-                book => book.Title.Contains(filteringParameters.Title));
-        }
-
-        if (filteringParameters.CategoryId is not null)
-        {
-            query = query.Where(
-                book => book.CategoryId == filteringParameters.CategoryId);
-        }
-
-        if (filteringParameters.AuthorId is not null)
-        {
-            query = query.Where(
-                book => book.Authors.Any(
-                    author => author.Id == filteringParameters.AuthorId));
-        }
-
-        query = sortingParameters.SortBy switch
-        {
-            BookSortBy.Title => sortingParameters.SortDirection == SortDirection.Asc ?
-                query.OrderBy(book => book.Title) :
-                query.OrderByDescending(book => book.Title),
-            BookSortBy.AvailableCopies => sortingParameters.SortDirection == SortDirection.Asc ?
-                query.OrderBy(book => book.AvailableCopies) :
-                query.OrderByDescending(book => book.AvailableCopies),
-            _ => query.OrderBy(book => book.Id)
-        };
-
-        return await query.ToPagedResult(
-            pagination,
-            book => mapper.ToReadDto(book));
+            .Include(book => book.Authors.OrderBy(author => author.Id))
+            .ApplyFiltering(filteringParameters)
+            .ApplySorting(sortingParameters)
+            .ToPagedResult(
+                pagination,
+                book => mapper.ToReadDto(book));
     }
 
     public async Task<ErrorOr<ReadBookDto>> CreateAsync(CreateBookDto createDto)
@@ -91,6 +61,7 @@ public class BooksService(
 
         var authors = await dbContext.Authors
             .Where(author => uniqueAuthorIds.Contains(author.Id))
+            .OrderBy(author => author.Id)
             .ToListAsync();
 
         if (authors.Count != uniqueAuthorIds.Count)
@@ -134,6 +105,7 @@ public class BooksService(
 
         var authors = await dbContext.Authors
             .Where(author => uniqueAuthorIds.Contains(author.Id))
+            .OrderBy(author => author.Id)
             .ToListAsync();
 
         if (authors.Count != uniqueAuthorIds.Count)

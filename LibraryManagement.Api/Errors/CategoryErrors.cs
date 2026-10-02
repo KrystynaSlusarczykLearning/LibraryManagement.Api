@@ -9,12 +9,6 @@ public static class CategoryErrors
                 detail: $"A category with Id {id} has not been found.",
                 statusCode: StatusCodes.Status404NotFound);
 
-    public static ProblemHttpResult HasActiveLoans(int id) =>
-        TypedResults.Problem(
-                detail: $"A member with Id {id} cannot be deactivated because " +
-                        $"they have active loans.",
-                statusCode: StatusCodes.Status409Conflict);
-
     public static ProblemHttpResult NameAlreadyTaken(string name) =>
         TypedResults.Problem(
             detail: $"A category with Name {name} already exists.",

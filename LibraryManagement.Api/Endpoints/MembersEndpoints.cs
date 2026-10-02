@@ -75,7 +75,9 @@ public static class MembersEndpoints
             PageSize = pageSize
         };
 
-        var query = dbContext.Members.AsQueryable();
+        var query = dbContext
+            .Members
+            .OrderBy(member => member.Id);
 
         var pagedResult = await query.ToPagedResult(
             pagination,
@@ -103,6 +105,7 @@ public static class MembersEndpoints
             .Include(loan => loan.Member)
             .Where(loan => loan.MemberId == id)
             .OrderByDescending(loan => loan.LoanDate)
+            .ThenByDescending(loan => loan.Id)
             .ToListAsync();
 
         var loanDtos = loans.Select(loan => mapper.ToReadDto(loan)).ToList();

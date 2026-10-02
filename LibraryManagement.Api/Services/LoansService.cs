@@ -37,52 +37,14 @@ public class LoansService(
         LoanFilteringParameters filteringParameters,
         SortingParameters<LoanSortBy> sortingParameters)
     {
-        var query = dbContext.Loans
+        return await dbContext.Loans
             .Include(loan => loan.Member)
             .Include(loan => loan.Book)
-            .AsQueryable();
-
-        if (filteringParameters.BookId is not null)
-        {
-            query = query.Where(
-                loan => loan.BookId == filteringParameters.BookId);
-        }
-
-        if (filteringParameters.MemberId is not null)
-        {
-            query = query.Where(
-                loan => loan.MemberId == filteringParameters.MemberId);
-        }
-
-        if (filteringParameters.LoanStatus is not null)
-        {
-            query = filteringParameters.LoanStatus switch
-            {
-                LoanStatus.Returned =>
-                    query.Where(loan => loan.ReturnDate != null),
-                LoanStatus.Overdue =>
-                    query.Where(loan => loan.ReturnDate == null &&
-                                        loan.DueDate < DateOnly.FromDateTime(DateTime.Today)),
-                LoanStatus.Active =>
-                    query.Where(loan => loan.ReturnDate == null &&
-                                        loan.DueDate >= DateOnly.FromDateTime(DateTime.Today))
-            };
-        }
-
-        query = sortingParameters.SortBy switch
-        {
-            LoanSortBy.DueDate => sortingParameters.SortDirection == SortDirection.Asc ?
-                query.OrderBy(loan => loan.DueDate) :
-                query.OrderByDescending(loan => loan.DueDate),
-            LoanSortBy.LoanDate => sortingParameters.SortDirection == SortDirection.Asc ?
-                query.OrderBy(loan => loan.LoanDate) :
-                query.OrderByDescending(loan => loan.LoanDate),
-            _ => query.OrderBy(loan => loan.Id)
-        };
-
-        return await query.ToPagedResult(
-            pagination,
-            loan => mapper.ToReadDto(loan));
+            .ApplyFiltering(filteringParameters)
+            .ApplySorting(sortingParameters)
+            .ToPagedResult(
+                pagination,
+                loan => mapper.ToReadDto(loan));
     }
 
     public async Task<ErrorOr<ReadLoanDto>> CreateAsync(CreateLoanDto createDto)

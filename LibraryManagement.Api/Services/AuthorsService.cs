@@ -19,7 +19,7 @@ public class AuthorsService(
     public async Task<ErrorOr<ReadAuthorDetailDto>> GetByIdAsync(int id)
     {
         var author = await dbContext.Authors
-            .Include(author => author.Books)
+            .Include(author => author.Books.OrderBy(book => book.Id))
             .FirstOrDefaultAsync(author => author.Id == id);
 
         if (author is null)
@@ -34,8 +34,7 @@ public class AuthorsService(
         PaginationParameters pagination)
     {
         var query = dbContext.Authors
-            .OrderBy(author => author.Id)
-            .AsQueryable();
+            .OrderBy(author => author.Id);
 
         return await query.ToPagedResult(
             pagination,
@@ -57,7 +56,7 @@ public class AuthorsService(
         UpdateAuthorDto updateDto)
     {
         var existingAuthor = await dbContext.Authors
-            .Include(author => author.Books)
+            .Include(author => author.Books.OrderBy(book => book.Id))
             .FirstOrDefaultAsync(author => author.Id == id);
 
         if (existingAuthor is null)
@@ -77,7 +76,7 @@ public class AuthorsService(
         JsonPatchDocument<PatchAuthorDto> patchDocument)
     {
         var existingAuthor = await dbContext.Authors
-            .Include(author => author.Books)
+            .Include(author => author.Books.OrderBy(book => book.Id))
             .FirstOrDefaultAsync(author => author.Id == id);
 
         if (existingAuthor is null)

@@ -67,10 +67,12 @@ public static class CategoriesEndpoints
         LibraryDbContext dbContext,
         CategoryMapper mapper)
     {
-        var categories = await dbContext.Categories.ToListAsync();
+        var categories = await dbContext
+            .Categories
+            .OrderBy(category => category.Name)
+            .ToListAsync();
 
         var readDtos = categories
-            .OrderBy(category => category.Name)
             .Select(mapper.ToReadDto)
             .ToList();
 
@@ -100,9 +102,9 @@ public static class CategoriesEndpoints
 
         var query = dbContext.Books
             .Include(book => book.Category)
-            .Include(book => book.Authors)
+            .Include(book => book.Authors.OrderBy(author => author.Id))
             .Where(book => book.CategoryId == id)
-            .AsQueryable();
+            .OrderBy(book => book.Id);
 
         var pagedResult = await query.ToPagedResult(
             pagination,
