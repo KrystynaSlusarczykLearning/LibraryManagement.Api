@@ -3,6 +3,7 @@ using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Categories;
 using LibraryManagement.Api.DTOs.Members;
 using LibraryManagement.Api.Endpoints;
+using LibraryManagement.Api.Entities;
 using LibraryManagement.Api.Filters;
 using LibraryManagement.Api.Mapping;
 using LibraryManagement.Api.Middleware;
@@ -10,6 +11,7 @@ using LibraryManagement.Api.Services;
 using LibraryManagement.Api.Services.Contracts;
 using LibraryManagement.Api.Validators.Categories;
 using LibraryManagement.Api.Validators.Members;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -22,6 +24,10 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddDbContext<LibraryDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("LibraryDb")));
+builder.Services
+    .AddIdentityCore<ApplicationUser>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<LibraryDbContext>()
 builder.Services.AddScoped<AuthorMapper>();
 builder.Services.AddScoped<BookMapper>();
 builder.Services.AddScoped<CategoryMapper>();
