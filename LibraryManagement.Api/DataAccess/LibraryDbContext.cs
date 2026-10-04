@@ -21,5 +21,11 @@ public class LibraryDbContext : IdentityDbContext<ApplicationUser>
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder
+            .Entity<Member>()
+            .HasOne<ApplicationUser>()
+            .WithOne()
+            .HasForeignKey<Member>(member => member.UserId);
     }
 }

@@ -27,7 +27,7 @@ builder.Services.AddDbContext<LibraryDbContext>(options =>
 builder.Services
     .AddIdentityCore<ApplicationUser>()
     .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<LibraryDbContext>()
+    .AddEntityFrameworkStores<LibraryDbContext>();
 builder.Services.AddScoped<AuthorMapper>();
 builder.Services.AddScoped<BookMapper>();
 builder.Services.AddScoped<CategoryMapper>();

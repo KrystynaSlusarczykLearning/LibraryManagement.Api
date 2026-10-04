@@ -221,7 +221,14 @@ namespace LibraryManagement.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("Members");
                 });
@@ -401,6 +408,15 @@ namespace LibraryManagement.Api.Migrations
                     b.Navigation("Book");
 
                     b.Navigation("Member");
+                });
+
+            modelBuilder.Entity("LibraryManagement.Api.Entities.Member", b =>
+                {
+                    b.HasOne("LibraryManagement.Api.Entities.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("LibraryManagement.Api.Entities.Member", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
