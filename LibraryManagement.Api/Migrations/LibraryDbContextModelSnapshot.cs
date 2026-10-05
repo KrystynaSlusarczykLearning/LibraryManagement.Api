@@ -257,6 +257,22 @@ namespace LibraryManagement.Api.Migrations
                         .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "bf542e02-37f0-4fe8-807c-73eed1c09356",
+                            ConcurrencyStamp = "01def283-aa36-4b88-b2ea-a053cab46da2",
+                            Name = "Member",
+                            NormalizedName = "MEMBER"
+                        },
+                        new
+                        {
+                            Id = "132d1719-e810-4f6d-9fc1-72781b08b0d7",
+                            ConcurrencyStamp = "5647f8af-22fb-4e7b-ae18-c0fb035407e9",
+                            Name = "Librarian",
+                            NormalizedName = "LIBRARIAN"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

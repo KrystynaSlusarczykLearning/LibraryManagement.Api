@@ -8,15 +8,12 @@ namespace LibraryManagement.Api.Mapping;
 public partial class MemberMapper
 {
     [MapperIgnoreSource(nameof(Member.Loans))]
+    [MapperIgnoreSource(nameof(Member.UserId))]
     public partial ReadMemberDto ToReadDto(Member source);
 
     [MapperIgnoreTarget(nameof(Member.Id))]
     [MapperIgnoreTarget(nameof(Member.IsActive))]
     [MapperIgnoreTarget(nameof(Member.Loans))]
-    public partial Member ToEntity(CreateMemberDto source);
-
-    [MapperIgnoreTarget(nameof(Member.Id))]
-    [MapperIgnoreTarget(nameof(Member.IsActive))]
-    [MapperIgnoreTarget(nameof(Member.Loans))]
+    [MapperIgnoreTarget(nameof(Member.UserId))]
     public partial void UpdateEntity(UpdateMemberDto source, Member target);
 }

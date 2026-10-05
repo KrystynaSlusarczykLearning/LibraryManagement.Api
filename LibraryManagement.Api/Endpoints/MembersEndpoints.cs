@@ -30,10 +30,6 @@ public static class MembersEndpoints
         group.MapGet("/{id:int}/loans", GetLoans)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        group.MapPost("/", Create)
-            .AddEndpointFilter<ValidationFilter<CreateMemberDto>>()
-            .ProducesProblem(StatusCodes.Status400BadRequest);
-
         group.MapPut("/{id:int}", Update)
             .AddEndpointFilter<ValidationFilter<UpdateMemberDto>>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
@@ -111,23 +107,6 @@ public static class MembersEndpoints
         var loanDtos = loans.Select(loan => mapper.ToReadDto(loan)).ToList();
 
         return TypedResults.Ok(loanDtos);
-    }
-
-    private static async Task<CreatedAtRoute<ReadMemberDto>> Create(
-        CreateMemberDto createDto,
-        LibraryDbContext dbContext,
-        MemberMapper mapper)
-    {
-        var member = mapper.ToEntity(createDto);
-        member.IsActive = true;
-
-        dbContext.Members.Add(member);
-        await dbContext.SaveChangesAsync();
-
-        return TypedResults.CreatedAtRoute(
-            mapper.ToReadDto(member),
-            "GetMemberById",
-            new { id = member.Id });
     }
 
     private static async Task<Results<Ok<ReadMemberDto>, ProblemHttpResult>> Update(
