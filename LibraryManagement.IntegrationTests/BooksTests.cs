@@ -1,5 +1,6 @@
 ﻿using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.DTOs.Categories;
+using LibraryManagement.Api.DTOs.Members;
 using LibraryManagement.IntegrationTests.Utils;
 using System.Net;
 
@@ -13,14 +14,17 @@ internal class BooksTests : IntegrationTestsBase
     private const string TitleDune = "Dune";
     private const string TitleEmma = "Emma";
     private const string TitleHamlet = "Hamlet";
+    private const string SampleEmail = "email1@gmail.com";
     private const int NonExistentId = 99;
 
     private ReadCategoryDto _category = null!;
+    private ReadMemberDto _member = null!;
 
     [SetUp]
-    public async Task CreateCategory()
+    public async Task CreateDefaultResources()
     {
         _category = await TestDataFactory.CreateCategoryAsync();
+        _member = await TestDataFactory.CreateMemberAsync(email: SampleEmail);
     }
 
     [Test]
@@ -399,8 +403,8 @@ internal class BooksTests : IntegrationTestsBase
     {
         var book = await TestDataFactory.CreateBookAsync(
             _category.Id, TitleDune, totalCopies: 3);
-        await TestDataFactory.CreateLoanForBookAsync(book.Id);
-        await TestDataFactory.CreateLoanForBookAsync(book.Id);
+        await TestDataFactory.CreateLoanAsync(book.Id, _member.Id);
+        await TestDataFactory.CreateLoanAsync(book.Id, _member.Id);
 
         var updateResponse = await PutAsync(ToUpdateDto(book, totalCopies: 2), book.Id);
 
@@ -417,8 +421,8 @@ internal class BooksTests : IntegrationTestsBase
     {
         var book = await TestDataFactory.CreateBookAsync(
             _category.Id, TitleDune, totalCopies: 3);
-        await TestDataFactory.CreateLoanForBookAsync(book.Id);
-        await TestDataFactory.CreateLoanForBookAsync(book.Id);
+        await TestDataFactory.CreateLoanAsync(book.Id, _member.Id);
+        await TestDataFactory.CreateLoanAsync(book.Id, _member.Id);
 
         var updateResponse = await PutAsync(ToUpdateDto(book, totalCopies: 1), book.Id);
 
@@ -435,8 +439,8 @@ internal class BooksTests : IntegrationTestsBase
     {
         var book = await TestDataFactory.CreateBookAsync(
             _category.Id, TitleDune, totalCopies: 2);
-        await TestDataFactory.CreateReturnedLoanForBookAsync(book.Id);
-        await TestDataFactory.CreateReturnedLoanForBookAsync(book.Id);
+        await TestDataFactory.CreateReturnedLoanAsync(book.Id, _member.Id);
+        await TestDataFactory.CreateReturnedLoanAsync(book.Id, _member.Id);
 
         var updateResponse = await PutAsync(ToUpdateDto(book, totalCopies: 0), book.Id);
 

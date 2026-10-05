@@ -8,6 +8,7 @@ namespace LibraryManagement.UnitTests.Mapping;
 internal class MemberMapperTests
 {
     private readonly MemberMapper _cut = new();
+    private const string SampleUserId = "bfcef2a7-a309-4345-8a69-d1234500f056";
 
     [TestCase(true)]
     [TestCase(false)]
@@ -18,7 +19,8 @@ internal class MemberMapperTests
             Id = 7,
             FirstName = "Jane",
             LastName = "Smith",
-            IsActive = isActive
+            IsActive = isActive,
+            UserId = SampleUserId
         };
 
         var result = _cut.ToReadDto(member);
@@ -30,20 +32,6 @@ internal class MemberMapperTests
             LastName = "Smith",
             IsActive = isActive
         }));
-    }
-
-    [Test]
-    public void ToEntity_ShouldMapNames_AndLeaveOtherPropertiesAtDefaults()
-    {
-        var dto = new CreateMemberDto { FirstName = "Jane", LastName = "Smith" };
-
-        var result = _cut.ToEntity(dto);
-
-        Assert.That(result.FirstName, Is.EqualTo("Jane"));
-        Assert.That(result.LastName, Is.EqualTo("Smith"));
-        Assert.That(result.Id, Is.Zero);
-        Assert.That(result.IsActive, Is.False);
-        Assert.That(result.Loans, Is.Empty);
     }
 
     [Test]
@@ -62,7 +50,8 @@ internal class MemberMapperTests
             FirstName = "Jane",
             LastName = "Smith",
             IsActive = true,
-            Loans = [loan]
+            Loans = [loan],
+            UserId = SampleUserId
         };
         var dto = new UpdateMemberDto { FirstName = "John", LastName = "Brown" };
 

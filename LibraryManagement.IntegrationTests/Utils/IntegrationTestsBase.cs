@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -32,7 +33,10 @@ internal abstract class IntegrationTestsBase
                     services.RemoveAll<LibraryDbContext>();
 
                     services.AddDbContext<LibraryDbContext>(options =>
-                        options.UseInMemoryDatabase(DatabaseName));
+                        options
+                        .UseInMemoryDatabase(DatabaseName)
+                        .ConfigureWarnings(warning => 
+                            warning.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
                 });
             });
 

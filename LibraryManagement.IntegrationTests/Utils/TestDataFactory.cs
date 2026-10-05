@@ -3,6 +3,7 @@ using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.DTOs.Categories;
 using LibraryManagement.Api.DTOs.Loans;
 using LibraryManagement.Api.DTOs.Members;
+using LibraryManagement.Api.DTOs.Users;
 using System.Net.Http.Json;
 
 namespace LibraryManagement.IntegrationTests.Utils;
@@ -131,30 +132,35 @@ internal class TestDataFactory
 
     public async Task<ReadMemberDto> CreateMemberAsync(
         string firstName = "Jane",
-        string lastName = "Smith")
+        string lastName = "Smith",
+        string email = "abc@gmail.com",
+        string password = "Pa$$word123")
     {
-        var createMemberDto = new CreateMemberDto
+        var registerDto = new RegisterMemberUserDto
         {
             FirstName = firstName,
-            LastName = lastName
+            LastName = lastName,
+            Email = email,
+            Password = password
         };
 
-        var createMemberResponse = await _client.PostAsJsonAsync(
-            "/api/members", createMemberDto);
+        var registerMemberResponse = await _client.PostAsJsonAsync(
+            "/api/authentication/register", registerDto);
 
-        await createMemberResponse.EnsureSuccessStatusCodeWitDetailsAsync();
+        await registerMemberResponse.EnsureSuccessStatusCodeWitDetailsAsync();
 
         var createdMember =
-            await createMemberResponse.ReadPayloadAsync<ReadMemberDto>();
+            await registerMemberResponse.ReadPayloadAsync<ReadMemberDto>();
 
         return createdMember!;
     }
 
     public async Task<ReadMemberDto> CreateInactiveMemberAsync(
         string firstName = "Jane",
-        string lastName = "Smith")
+        string lastName = "Smith",
+        string email = "abc@gmail.com")
     {
-        var member = await CreateMemberAsync(firstName, lastName);
+        var member = await CreateMemberAsync(firstName, lastName, email);
 
         var deleteMemberResponse = await _client.DeleteAsync(
             $"/api/members/{member.Id}");

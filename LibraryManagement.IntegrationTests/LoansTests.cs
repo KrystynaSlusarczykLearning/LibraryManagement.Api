@@ -13,6 +13,7 @@ internal class LoansTests : IntegrationTestsBase
     protected override string DatabaseName => nameof(LoansTests);
     protected override string BaseUrl => "/api/loans";
     private const string BookTitle = "Dune";
+    private const string SampleEmail = "email1@gmail.com";
     private const int BookTotalCopies = 10;
     private const int NonExistentId = 99;
     private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.Today);
@@ -124,7 +125,8 @@ internal class LoansTests : IntegrationTestsBase
     [Test]
     public async Task GetAll_ShouldFilterByMemberId()
     {
-        var otherMember = await TestDataFactory.CreateMemberAsync("John", "Brown");
+        var otherMember = await TestDataFactory.CreateMemberAsync(
+            "John", "Brown", SampleEmail);
         var loan = await TestDataFactory.CreateLoanAsync(_book.Id, _member.Id);
         await TestDataFactory.CreateLoanAsync(_book.Id, otherMember.Id);
 
@@ -346,7 +348,8 @@ internal class LoansTests : IntegrationTestsBase
     [Test]
     public async Task Create_ShouldReturnConflict_WhenMemberIsInactive()
     {
-        var inactiveMember = await TestDataFactory.CreateInactiveMemberAsync("John", "Brown");
+        var inactiveMember = await TestDataFactory.CreateInactiveMemberAsync(
+            "John", "Brown", SampleEmail);
 
         var createResponse = await PostAsync(new CreateLoanDto
         {

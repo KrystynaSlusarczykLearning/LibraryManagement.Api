@@ -15,13 +15,15 @@ internal class MembersTests : IntegrationTestsBase
     private const string LastNameSmith = "Smith";
     private const string FirstNameJohn = "John";
     private const string LastNameBrown = "Brown";
+    private const string Email1 = "email1@gmail.com";
+    private const string Email2 = "email2@gmail.com";
     private const int NonExistentMemberId = 99;
 
     [Test]
     public async Task GetById_ShouldReturnMember()
     {
-        var createdMember = await CreateAsync<CreateMemberDto, ReadMemberDto>(
-            new CreateMemberDto { FirstName = FirstNameJane, LastName = LastNameSmith });
+        var createdMember = await TestDataFactory.CreateMemberAsync(
+            firstName: FirstNameJane, lastName: LastNameSmith);
 
         var getResponse = await GetByIdAsync(createdMember.Id);
 
@@ -46,8 +48,10 @@ internal class MembersTests : IntegrationTestsBase
     [Test]
     public async Task GetAll_ShouldReturnAllCreatedMembers_OrderedById()
     {
-        var member1 = await TestDataFactory.CreateMemberAsync(FirstNameJane, LastNameSmith);
-        var member2 = await TestDataFactory.CreateMemberAsync(FirstNameJohn, LastNameBrown);
+        var member1 = await TestDataFactory.CreateMemberAsync(
+            FirstNameJane, LastNameSmith, Email1);
+        var member2 = await TestDataFactory.CreateMemberAsync(
+            FirstNameJohn, LastNameBrown, Email2);
 
         var response = await GetAllAsync();
 
@@ -77,8 +81,10 @@ internal class MembersTests : IntegrationTestsBase
     [Test]
     public async Task GetAll_ShouldIncludeInactiveMembers()
     {
-        var activeMember = await TestDataFactory.CreateMemberAsync(FirstNameJane, LastNameSmith);
-        var inactiveMember = await TestDataFactory.CreateInactiveMemberAsync(FirstNameJohn, LastNameBrown);
+        var activeMember = await TestDataFactory.CreateMemberAsync(
+            FirstNameJane, LastNameSmith, Email1);
+        var inactiveMember = await TestDataFactory.CreateInactiveMemberAsync(
+            FirstNameJohn, LastNameBrown, Email2);
 
         var response = await GetAllAsync();
 
@@ -96,7 +102,8 @@ internal class MembersTests : IntegrationTestsBase
     {
         for (int i = 1; i <= 5; ++i)
         {
-            await TestDataFactory.CreateMemberAsync(lastName: $"Member{i}");
+            await TestDataFactory.CreateMemberAsync(
+                lastName: $"Member{i}", email: $"email{i}@gmail.com");
         }
 
         var response = await GetWithQuery(BaseUrl, new()
@@ -121,7 +128,8 @@ internal class MembersTests : IntegrationTestsBase
     {
         for (int i = 1; i <= 3; ++i)
         {
-            await TestDataFactory.CreateMemberAsync(lastName: $"Member{i}");
+            await TestDataFactory.CreateMemberAsync(
+                lastName: $"Member{i}", email: $"email{i}@gmail.com");
         }
 
         var response = await GetWithQuery(BaseUrl, new()
@@ -139,64 +147,6 @@ internal class MembersTests : IntegrationTestsBase
             Is.EqualTo(["Member1"]));
 
         response.AssertThatPaginationHeadersAre(totalCount: 3, totalPages: 3);
-    }
-
-    [Test]
-    public async Task Create_ShouldReturnCreated_WithCorrectData_AndActiveStatus()
-    {
-        var createDto = new CreateMemberDto
-        {
-            FirstName = FirstNameJane,
-            LastName = LastNameSmith
-        };
-
-        var createResponse = await PostAsync(createDto);
-
-        Assert.That(createResponse.StatusCode, Is.EqualTo(HttpStatusCode.Created));
-
-        var createdMember = await createResponse.ReadPayloadAsync<ReadMemberDto>();
-
-        Assert.That(createdMember, Is.Not.Null);
-        Assert.That(createdMember.FirstName, Is.EqualTo(createDto.FirstName));
-        Assert.That(createdMember.LastName, Is.EqualTo(createDto.LastName));
-        Assert.That(createdMember.IsActive, Is.True);
-        Assert.That(createdMember.Id, Is.GreaterThan(0));
-
-        Assert.That(createResponse.GetLocation(),
-            Is.EqualTo($"{BaseUrl}/{createdMember.Id}"));
-
-        await AssertMemberExistsInTheDatabase(createdMember);
-    }
-
-    [Test]
-    public async Task Create_ShouldAllowMembersWithTheSameName()
-    {
-        var firstMember = await TestDataFactory.CreateMemberAsync(FirstNameJane, LastNameSmith);
-
-        var createResponse = await PostAsync(
-            new CreateMemberDto { FirstName = FirstNameJane, LastName = LastNameSmith });
-
-        Assert.That(createResponse.StatusCode, Is.EqualTo(HttpStatusCode.Created));
-
-        var secondMember = await createResponse.ReadPayloadAsync<ReadMemberDto>();
-
-        Assert.That(secondMember, Is.Not.Null);
-        Assert.That(secondMember.Id, Is.Not.EqualTo(firstMember.Id));
-    }
-
-    [Test]
-    public async Task Create_ShouldReturnBadRequest_WhenNameIsInvalid()
-    {
-        var createDto = new CreateMemberDto
-        {
-            FirstName = string.Empty,
-            LastName = LastNameSmith
-        };
-
-        var createResponse = await PostAsync(createDto);
-
-        Assert.That(createResponse.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
-        await createResponse.AssertThatValidationErrorsContain("FirstName");
     }
 
     [Test]
@@ -340,8 +290,10 @@ internal class MembersTests : IntegrationTestsBase
     [Test]
     public async Task Delete_ShouldNotBeBlocked_ByActiveLoansOfOtherMembers()
     {
-        var memberToDelete = await TestDataFactory.CreateMemberAsync(FirstNameJane, LastNameSmith);
-        var otherMember = await TestDataFactory.CreateMemberAsync(FirstNameJohn, LastNameBrown);
+        var memberToDelete = await TestDataFactory.CreateMemberAsync(
+            FirstNameJane, LastNameSmith, Email1);
+        var otherMember = await TestDataFactory.CreateMemberAsync(
+            FirstNameJohn, LastNameBrown, Email2);
         await TestDataFactory.CreateLoanForMemberAsync(otherMember.Id);
 
         var deleteResponse = await DeleteAsync(memberToDelete.Id);
@@ -412,8 +364,10 @@ internal class MembersTests : IntegrationTestsBase
     [Test]
     public async Task GetLoans_ShouldReturnLoans_ForThatMemberOnly_OrderedByLoanDateDescending()
     {
-        var member = await TestDataFactory.CreateMemberAsync(FirstNameJane, LastNameSmith);
-        var otherMember = await TestDataFactory.CreateMemberAsync(FirstNameJohn, LastNameBrown);
+        var member = await TestDataFactory.CreateMemberAsync(
+            FirstNameJane, LastNameSmith, Email1);
+        var otherMember = await TestDataFactory.CreateMemberAsync(
+            FirstNameJohn, LastNameBrown, Email2);
         var book = await TestDataFactory.CreateBookAsync(totalCopies: 5);
         var today = DateOnly.FromDateTime(DateTime.Today);
 
