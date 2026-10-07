@@ -1,4 +1,5 @@
 using FluentValidation;
+using LibraryManagement.Api.Common;
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Categories;
 using LibraryManagement.Api.DTOs.Members;
@@ -43,6 +44,8 @@ builder.Services.AddScoped<IAuthorsService, AuthorsService>();
 builder.Services.AddScoped<IBooksService, BooksService>();
 builder.Services.AddScoped<ILoansService, LoansService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection("JwtSettings"));
 
 var app = builder.Build();
 
