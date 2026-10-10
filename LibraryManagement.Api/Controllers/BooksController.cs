@@ -1,18 +1,22 @@
 ﻿using LibraryManagement.Api.Common;
 using LibraryManagement.Api.DTOs.Books;
+using LibraryManagement.Api.Entities;
 using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.RequestParameters;
 using LibraryManagement.Api.RequestParameters.Enums;
 using LibraryManagement.Api.Services.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryManagement.Api.Controllers;
 
+[Authorize(Roles = Roles.Librarian)]
 [ApiController]
 [Route("api/[controller]")]
 public class BooksController(
     IBooksService booksService) : WebApiController
 {
+    [AllowAnonymous]
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(ReadBookDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -28,6 +32,7 @@ public class BooksController(
         return Ok(result.Value);
     }
 
+    [AllowAnonymous]
     [HttpGet]
     [ProducesResponseType(typeof(List<ReadBookDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<ReadBookDto>>> GetAll(

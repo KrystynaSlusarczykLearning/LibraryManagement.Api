@@ -1,13 +1,16 @@
 ﻿using LibraryManagement.Api.Common;
 using LibraryManagement.Api.DTOs.Loans;
+using LibraryManagement.Api.Entities;
 using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.RequestParameters;
 using LibraryManagement.Api.RequestParameters.Enums;
 using LibraryManagement.Api.Services.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryManagement.Api.Controllers;
 
+[Authorize(Roles = Roles.Librarian)]
 [ApiController]
 [Route("api/[controller]")]
 public class LoansController(

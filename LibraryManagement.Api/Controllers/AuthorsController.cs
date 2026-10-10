@@ -1,20 +1,24 @@
 ﻿using LibraryManagement.Api.Common;
 using LibraryManagement.Api.DTOs.Authors;
+using LibraryManagement.Api.Entities;
 using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.Filters;
 using LibraryManagement.Api.RequestParameters;
 using LibraryManagement.Api.Services.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch.SystemTextJson;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryManagement.Api.Controllers;
 
+[Authorize(Roles = Roles.Librarian)]
 [ServiceFilter(typeof(LogActionFilter))]
 [ApiController]
 [Route("api/[controller]")]
 public class AuthorsController(
     IAuthorsService authorsService) : WebApiController
 {
+    [AllowAnonymous]
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(ReadAuthorDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -30,6 +34,7 @@ public class AuthorsController(
         return Ok(result.Value);
     }
 
+    [AllowAnonymous]
     [HttpGet]
     [ProducesResponseType(typeof(List<ReadAuthorDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<ReadAuthorDto>>> GetAll(

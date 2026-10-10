@@ -37,15 +37,24 @@ public static class MembersEndpoints
 
         group.MapPut("/{id:int}", Update)
             .AddEndpointFilter<ValidationFilter<UpdateMemberDto>>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status400BadRequest)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireAuthorization(Roles.Librarian);
 
         group.MapDelete("/{id:int}", Delete)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .RequireAuthorization(Roles.Librarian);
 
         group.MapPatch("/{id:int}/restore", Restore)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireAuthorization(Roles.Librarian);
     }
 
     private static async Task<Results<Ok<ReadMemberDto>, ProblemHttpResult>> GetById(

@@ -4,6 +4,7 @@ using LibraryManagement.Api.Common;
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.DTOs.Categories;
+using LibraryManagement.Api.Entities;
 using LibraryManagement.Api.Errors;
 using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.Filters;
@@ -35,17 +36,26 @@ public static class CategoriesEndpoints
         group.MapPost("/", Create)
             .AddEndpointFilter<ValidationFilter<CreateCategoryDto>>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .RequireAuthorization(Roles.Librarian);
 
         group.MapPut("/{id:int}", Update)
             .AddEndpointFilter<ValidationFilter<UpdateCategoryDto>>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .RequireAuthorization(Roles.Librarian);
 
         group.MapDelete("/{id:int}", Delete)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .RequireAuthorization(Roles.Librarian);
     }
 
     private static async Task<Results<Ok<ReadCategoryDto>, ProblemHttpResult>> GetById(

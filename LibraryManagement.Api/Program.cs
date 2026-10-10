@@ -94,7 +94,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(Roles.Librarian, policy => policy.RequireRole(Roles.Librarian));
+});
 
 var app = builder.Build();
 
