@@ -2,7 +2,7 @@
 
 namespace LibraryManagement.Api.DTOs.Users;
 
-public class RegisterMemberUserDto
+public record RegisterMemberUserDto
 {
     [Required]
     [MaxLength(50)]

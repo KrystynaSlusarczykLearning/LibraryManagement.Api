@@ -1,4 +1,5 @@
 ﻿using LibraryManagement.Api.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace LibraryManagement.Api.DataAccess;
@@ -9,6 +10,7 @@ public static class DataSeeder
     {
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<LibraryDbContext>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
         if(!await dbContext.Authors.AnyAsync())
         {
@@ -92,6 +94,19 @@ public static class DataSeeder
             await dbContext.Books.AddRangeAsync(books);
             
             await dbContext.SaveChangesAsync();
+        }
+
+        const string AdminEmail = "admin@library.com";
+        if(!await userManager.Users.AnyAsync(user => user.UserName == AdminEmail))
+        {
+            var librarian = new ApplicationUser
+            {
+                Email = AdminEmail,
+                UserName = AdminEmail
+            };
+
+            await userManager.CreateAsync(librarian, "Admin123!");
+            await userManager.AddToRoleAsync(librarian, Roles.Librarian);
         }
     }
 }

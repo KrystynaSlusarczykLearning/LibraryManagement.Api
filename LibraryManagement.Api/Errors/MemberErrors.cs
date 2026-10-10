@@ -16,4 +16,9 @@ public static class MemberErrors
                 detail: $"A member with Id {id} cannot be deactivated because " +
                         $"they have active loans.",
                 statusCode: StatusCodes.Status409Conflict);
+
+    public static ProblemHttpResult Forbidden() =>
+        TypedResults.Problem(
+                detail: "The current user is not allowed to access this resource.",
+                statusCode: StatusCodes.Status403Forbidden);
 }

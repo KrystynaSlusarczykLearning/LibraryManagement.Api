@@ -8,4 +8,9 @@ public interface IAuthenticationService
 {
     Task<ErrorOr<ReadMemberDto>> RegisterMemberAsync(
         RegisterMemberUserDto registerDto);
+
+    Task<ErrorOr<Created>> RegisterLibrarianAsync(
+        RegisterLibrarianUserDto registerDto);
+
+    Task<ErrorOr<string>> LoginAsync(LoginDto loginDto);
 }

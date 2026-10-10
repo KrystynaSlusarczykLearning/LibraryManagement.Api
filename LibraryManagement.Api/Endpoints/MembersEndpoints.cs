@@ -2,6 +2,7 @@
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Loans;
 using LibraryManagement.Api.DTOs.Members;
+using LibraryManagement.Api.Entities;
 using LibraryManagement.Api.Errors;
 using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.Filters;
@@ -9,6 +10,7 @@ using LibraryManagement.Api.Mapping;
 using LibraryManagement.Api.RequestParameters;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace LibraryManagement.Api.Endpoints;
 
@@ -28,7 +30,10 @@ public static class MembersEndpoints
         group.MapGet("/", GetAll);
 
         group.MapGet("/{id:int}/loans", GetLoans)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireAuthorization();
 
         group.MapPut("/{id:int}", Update)
             .AddEndpointFilter<ValidationFilter<UpdateMemberDto>>()
@@ -87,13 +92,22 @@ public static class MembersEndpoints
     private static async Task<Results<Ok<List<ReadLoanDto>>, ProblemHttpResult>> GetLoans(
         int id,
         LibraryDbContext dbContext,
-        LoanMapper mapper)
+        LoanMapper mapper,
+        ClaimsPrincipal claimsPrincipal)
     {
         var member = await dbContext.Members.FindAsync(id);
 
         if (member is null)
         {
             return MemberErrors.NotFound(id);
+        }
+
+        var currentUserId = claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isLibrarian = claimsPrincipal.IsInRole(Roles.Librarian);
+
+        if(!isLibrarian && member.UserId != currentUserId)
+        {
+            return MemberErrors.Forbidden();
         }
 
         var loans = await dbContext.Loans

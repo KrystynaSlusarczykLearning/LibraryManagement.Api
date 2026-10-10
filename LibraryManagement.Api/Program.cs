@@ -12,9 +12,13 @@ using LibraryManagement.Api.Services;
 using LibraryManagement.Api.Services.Contracts;
 using LibraryManagement.Api.Validators.Categories;
 using LibraryManagement.Api.Validators.Members;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,11 +51,58 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("JwtSettings"));
 
+var jwtSettings = builder.Configuration.GetSection("JwtSettings")
+    .Get<JwtSettings>();
+if(jwtSettings is null)
+{
+    throw new InvalidOperationException("JwtSettings section is not configured.");
+}
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings.Issuer,
+            ValidAudience = jwtSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtSettings.Key)),
+            ClockSkew = TimeSpan.Zero
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnChallenge = context =>
+            {
+                context.HandleResponse();
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                
+                var problemDetails = new ProblemDetails
+                {
+                    Status = StatusCodes.Status401Unauthorized,
+                    Title = "Unauthorized",
+                    Detail = "Authentication is required to access this resource.",
+                    Instance = context.Request.Path
+                };
+
+                return context.Response.WriteAsJsonAsync(
+                    problemDetails,
+                    options: null,
+                    contentType: "application/problem+json");
+            }
+        };
+    });
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseMiddleware<RequestTimingMiddleware>();
 
 if (app.Environment.IsDevelopment())
