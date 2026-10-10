@@ -18,6 +18,8 @@ public class LoansController(
 {
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(ReadLoanDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ReadLoanDto>> GetById(int id)
     {
@@ -33,6 +35,8 @@ public class LoansController(
 
     [HttpGet]
     [ProducesResponseType(typeof(List<ReadLoanDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<List<ReadLoanDto>>> GetAll(
         [FromQuery] PaginationParameters pagination,
         [FromQuery] LoanFilteringParameters filteringParameters,
@@ -56,6 +60,8 @@ public class LoansController(
     [HttpPost]
     [ProducesResponseType(typeof(ReadLoanDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<ReadLoanDto>> Create(CreateLoanDto createDto)
     {
@@ -74,6 +80,8 @@ public class LoansController(
 
     [HttpPatch("{id:int}/return")]
     [ProducesResponseType(typeof(ReadLoanDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<ReadLoanDto>> Return(int id)
