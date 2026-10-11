@@ -410,6 +410,39 @@ internal class MembersTests : IntegrationTestsBase
         Assert.That(loans[0].ReturnDate, Is.Not.Null);
     }
 
+    [Test]
+    public async Task GetLoans_ShouldReturnForbidden_WhenMemberRequestsAnotherMembersLoans()
+    {
+        var member1 = await TestDataFactory.CreateMemberAsync(
+            lastName: LastNameSmith,
+            email: Email1);
+        var member2 = await TestDataFactory.CreateMemberAsync(
+            lastName: LastNameBrown,
+            email: Email2);
+
+        var memberClient = await CreateAuthenticatedClientAsync(Email1, "Pa$$word123");
+
+        var getLoansResponse = await memberClient.GetAsync(
+            $"{BaseUrl}/{member2.Id}/loans");
+
+        Assert.That(getLoansResponse.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
+    }
+
+    [Test]
+    public async Task GetLoans_ShouldReturnOk_WhenMemberRequestsOwnLoans()
+    {
+        var member = await TestDataFactory.CreateMemberAsync(
+            lastName: LastNameSmith,
+            email: Email1);
+
+        var memberClient = await CreateAuthenticatedClientAsync(Email1, "Pa$$word123");
+
+        var getLoansResponse = await memberClient.GetAsync(
+            $"{BaseUrl}/{member.Id}/loans");
+
+        Assert.That(getLoansResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+    }
+
     private async Task<HttpResponseMessage> RestoreAsync(int id)
     {
         return await PatchWithoutBodyAsync($"{BaseUrl}/{id}/restore");

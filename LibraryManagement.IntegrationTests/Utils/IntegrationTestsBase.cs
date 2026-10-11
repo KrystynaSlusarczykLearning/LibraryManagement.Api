@@ -42,6 +42,9 @@ internal abstract class IntegrationTestsBase
                         .UseInMemoryDatabase(DatabaseName)
                         .ConfigureWarnings(warning => 
                             warning.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
+
+                    services.Configure<PasswordHasherOptions>(
+                        options => options.IterationCount = 1);
                 });
                 builder.UseSetting(
                     "JwtSettings:Key",
@@ -134,6 +137,18 @@ internal abstract class IntegrationTestsBase
     protected async Task<HttpResponseMessage> DeleteAsync(int id)
     {
         return await Client.DeleteAsync($"{BaseUrl}/{id}");
+    }
+
+    protected async Task<HttpClient> CreateAuthenticatedClientAsync(
+        string email, string password)
+    {
+        var token = await LoginAsync(email, password);
+
+        var authenticatedClient = Factory.CreateClient();
+        authenticatedClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+
+        return authenticatedClient;
     }
 
     private async Task CreateLibrarianAsync()

@@ -25,9 +25,15 @@ public static class MembersEndpoints
 
         group.MapGet("/{id:int}", GetById)
             .WithName("GetMemberById")
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireAuthorization(Roles.Librarian);
 
-        group.MapGet("/", GetAll);
+        group.MapGet("/", GetAll)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .RequireAuthorization(Roles.Librarian);
 
         group.MapGet("/{id:int}/loans", GetLoans)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
