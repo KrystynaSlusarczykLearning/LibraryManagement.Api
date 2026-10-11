@@ -1,5 +1,8 @@
 ﻿using LibraryManagement.Api.DataAccess;
+using LibraryManagement.Api.DTOs.Users;
+using LibraryManagement.Api.Entities;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +22,8 @@ internal abstract class IntegrationTestsBase
     protected WebApplicationFactory<Program> Factory;
     protected HttpClient Client;
     protected TestDataFactory TestDataFactory;
+    private const string LibrarianEmail = "librarian@library.com";
+    private const string LibrarianPassword = "Librarian567@";
 
     [OneTimeSetUp]
     public void OneTimeSetUp()
@@ -38,9 +43,13 @@ internal abstract class IntegrationTestsBase
                         .ConfigureWarnings(warning => 
                             warning.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
                 });
+                builder.UseSetting(
+                    "JwtSettings:Key",
+                    "integration-tests-signing-key-at-least-32-bytes-long");
             });
 
         Client = Factory.CreateClient();
+
         TestDataFactory = new TestDataFactory(Client);
     }
 
@@ -60,6 +69,11 @@ internal abstract class IntegrationTestsBase
 
         await dbContext.Database.EnsureDeletedAsync();
         await dbContext.Database.EnsureCreatedAsync();
+
+        await CreateLibrarianAsync();
+        var librarianToken = await LoginAsync(LibrarianEmail, LibrarianPassword);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer", librarianToken);
     }
 
     protected async Task<HttpResponseMessage> GetByIdAsync(int id)
@@ -120,5 +134,41 @@ internal abstract class IntegrationTestsBase
     protected async Task<HttpResponseMessage> DeleteAsync(int id)
     {
         return await Client.DeleteAsync($"{BaseUrl}/{id}");
+    }
+
+    private async Task CreateLibrarianAsync()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+        await roleManager.CreateAsync(new IdentityRole(Roles.Librarian));
+        await roleManager.CreateAsync(new IdentityRole(Roles.Member));
+
+        var librarian = new ApplicationUser
+        {
+            Email = LibrarianEmail,
+            UserName = LibrarianEmail
+        };
+
+        await userManager.CreateAsync(librarian, LibrarianPassword);
+        await userManager.AddToRoleAsync(librarian, Roles.Librarian);
+    }
+
+    private async Task<string> LoginAsync(string email, string password)
+    {
+        var loginDto = new LoginDto
+        {
+            Email = email,
+            Password = password
+        };
+
+        var loginResponse = await Client.PostAsJsonAsync(
+            "/api/authentication/login", loginDto);
+
+        await loginResponse.EnsureSuccessStatusCodeWitDetailsAsync();
+
+        var token = await loginResponse.Content.ReadAsStringAsync();
+        return token;
     }
 }
