@@ -1,6 +1,4 @@
-﻿using ErrorOr;
-using LibraryManagement.Api.DTOs.Categories;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace LibraryManagement.Api.Errors;
 

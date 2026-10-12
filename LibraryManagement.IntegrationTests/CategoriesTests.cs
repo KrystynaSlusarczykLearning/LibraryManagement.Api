@@ -1,6 +1,5 @@
 ﻿using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.DTOs.Categories;
-using LibraryManagement.Api.Entities;
 using LibraryManagement.IntegrationTests.Utils;
 using System.Net;
 

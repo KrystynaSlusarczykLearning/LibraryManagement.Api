@@ -1,5 +1,4 @@
-﻿using LibraryManagement.Api.Common;
-using LibraryManagement.Api.DTOs.Authors;
+﻿using LibraryManagement.Api.DTOs.Authors;
 using LibraryManagement.Api.Entities;
 using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.Filters;

@@ -2,7 +2,6 @@
 using LibraryManagement.Api.CustomResults;
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Loans;
-using LibraryManagement.Api.Entities;
 using LibraryManagement.Api.Errors;
 using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.Mapping;

@@ -1,6 +1,4 @@
-﻿using ErrorOr;
-using FluentValidation;
-using LibraryManagement.Api.Common;
+﻿using FluentValidation;
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.DTOs.Categories;
