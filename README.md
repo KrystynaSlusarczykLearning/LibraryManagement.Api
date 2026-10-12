@@ -1,10 +1,10 @@
-# Building ASP.NET Core REST APIs with AI-Powered Workflow
+# Building ASP.NET Core REST APIs with an AI-Powered Workflow
 
 Hello!
 
 My name is Krystyna. Welcome to my GitHub.
 
-This repository is part of my **"Building ASP.NET Core REST APIs with AI-Powered Workflow"** course, which you can find under this link: https://www.udemy.com/course/draft/7045569/?referralCode=8D1EA00CE1E87A506724
+This repository is part of my **"Building ASP.NET Core REST APIs with an AI-Powered Workflow"** course, which you can find under this link: https://www.udemy.com/course/draft/7045569/?referralCode=8D1EA00CE1E87A506724
 
 ## FAQ:
 
